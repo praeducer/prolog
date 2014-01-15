@@ -9,9 +9,9 @@ presented more briefly (time permitting).
 Instructor: Don Potter 
 
 Texts: 
-1) PROLOG Programming in Depth, (1996 edition) by Covington, Nute, and Vellino 
-Coverage: Chapters 1-9, (maybe parts of 10-12) from (1).
-2) Lisp text: http://www.cs.uga.edu/~potter/ArtIntell/6540lisptexts.htm 
++ PROLOG Programming in Depth, (1996 edition) by Covington, Nute, and Vellino 
+Coverage: Chapters 1-9, (maybe parts of 10-12).
++ Lisp text: http://www.cs.uga.edu/~potter/ArtIntell/6540lisptexts.htm 
  
 References: 
 + Sterling & Shapiro, The Art of PROLOG Programming, MIT Press, 1986. 
