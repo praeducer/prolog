@@ -1,0 +1,704 @@
+%File: Paul_Prae.Cool_List_Assignment.pl
+%Author: Paul Prae
+%Last Edited: September 21st, 2011
+%Purpose: To learn how to work with lists in Prolog
+%For: Dr. Potter and CSCI 4540 Fall 2011
+%READ ME NOTE: A demo of this program is started by entering in 'start.' 
+%	after consulting this file.
+%***COPYRIGHT NOTICE***: The algorithms for flat_reverse/2 and most of
+%	perms/2 were presented by Dr. Don Potter in a lecture held at UGA 
+%	on 9/20/2011 at 12:30 p.m.
+
+
+
+%(1) COOL REVERSE: Reverses a list that possibly contains sub-lists
+%and reverses the elements in the sub-lists also; keeping the
+%structure of the list intact.
+cool_reverse(List, Result):-
+	nonvar(List),
+	is_list(List),
+	cool_reverse_aux(List, [], Result).
+
+cool_reverse_aux([Head|Tail], Stack, Result):-
+	cool_reverse_aux(Head, [], Reversed_Head),
+	cool_reverse_aux(Tail, [Reversed_Head|Stack], Result).
+
+cool_reverse_aux(Ele, [], Ele).
+
+cool_reverse_aux([], Result, Result).
+
+
+%(2) COOL DELETE ALL: Deletes all Ele from List and any sub-lists
+%contained within List.
+%If the list is empty nothing is in it
+cool_delete_all(_, [], []).
+
+%If all there is is the Ele in the List, return empty list
+cool_delete_all(Ele, [Ele|[]], []).
+
+%If all there is in the list is an element that is not the list
+%and it is not a list then return that element.
+%Make sure to return it in a list
+cool_delete_all(_, [NotEle|[]], [NotEle]):-
+	\+ is_list(NotEle).
+
+%If all there is is a list in the List then search it
+%Make sure to return it in a list
+cool_delete_all(Ele, [NotEle|[]], [Result]):-
+	is_list(NotEle),
+	cool_delete_all(Ele, NotEle, Result).
+
+%If the first Ele in the List is Ele, then peel it off and 
+%search the rest of the List.
+cool_delete_all(Ele, [Ele|Tail], Result):-
+	cool_delete_all(Ele, Tail, Result).
+
+%If the element is not at the head of the list then append
+%that head to the resulting list from search the tail.
+%This will succeed if NotEle is not a list.
+cool_delete_all(Ele, [NotEle|Tail], [NotEle|Tail_Result]):-
+	\+ is_list(NotEle),
+	cool_delete_all(Ele, Tail, Tail_Result).
+
+%If the element is not at the head of the list then append
+%that head to the resulting list from search the tail.
+%This will succeed if NotEle is a list.
+cool_delete_all(Ele, [NotEle|Tail], [NotEle_Result|Tail_Result]):-
+	is_list(NotEle),
+	cool_delete_all(Ele, NotEle, NotEle_Result),
+	cool_delete_all(Ele, Tail, Tail_Result).
+
+
+%(3) FLAT REVERSE: Flattens and reverses List.
+flat_reverse([],[]).
+
+flat_reverse([Head|Tail], Result):-
+	is_list(Head),
+	flat_reverse(Head, Head_Result),
+	flat_reverse(Tail, Tail_Result),
+	append(Tail_Result, Head_Result, Result).
+	
+flat_reverse([Head|Tail], Result):-
+	\+is_list(Head),
+	flat_reverse(Tail, Tail_Result),
+	append(Tail_Result, [Head], Result).
+
+
+%(4) FLAT_DELETE_ALL: Flattens List and deletes all occurences of Ele.
+%If the list is empty nothing is in it to flatten or delete
+flat_delete_all(_, [], []).
+
+%If all there is is the Ele in the List, return empty list
+flat_delete_all(Ele, [Ele|[]], []).
+
+%If all there is in the list is an element that is not the list
+%and it is not a list then return that element.
+%Make sure to return it in a list
+flat_delete_all(_, [NotEle|[]], [NotEle]):-
+	\+ is_list(NotEle).
+
+%If all there is is a list in the List then search it
+% and make it not a list
+flat_delete_all(Ele, [NotEle|[]], Result):-
+	is_list(NotEle),
+	flat_delete_all(Ele, NotEle, Result).
+
+%If the first Ele in the List is Ele, then peel it off and 
+%search the rest of the List.
+flat_delete_all(Ele, [Ele|Tail], Result):-
+	flat_delete_all(Ele, Tail, Result).
+
+%If the element is not at the head of the list then append
+%that head to the resulting list from search the tail.
+%This will succeed if NotEle is not a list.
+flat_delete_all(Ele, [NotEle|Tail], [NotEle|Tail_Result]):-
+	\+ is_list(NotEle),
+	flat_delete_all(Ele, Tail, Tail_Result).
+
+%If the element is not at the head of the list then append
+%that head to the resulting list from search the tail.
+%This will succeed if NotEle is a list.
+flat_delete_all(Ele, [NotEle|Tail], NotEle_Tail_Result):-
+	is_list(NotEle),
+	flat_delete_all(Ele, NotEle, NotEle_Result),
+	flat_delete_all(Ele, Tail, Tail_Result),
+	append(NotEle_Result, Tail_Result, NotEle_Tail_Result).
+
+
+%(5) PERMS: Takes a List of elements and prepares a Result list
+%containing sub-lists that correspond to the permutations of List.
+%If given the empty set return a List of the the empty set
+perms([],[[]]).
+
+%If given a single elements return a list of a single element
+%1c.2d.3a. ([a], [[a]])
+perms([X], [[X]]).
+
+%NOTE: Numbers confusingly indicate an example of a run-through of the algorithm
+%Peel each element off and build permutations with all other
+%elements while coming back up from recursion
+%1a. [a,b] enters in
+perms([Head|Tail], Result):-
+	perms_aux([Head|Tail], [Head|Tail], Result).
+
+%1.3a.([], [a,b], unify [] with Tail_Result)
+perms_aux([], _, []).
+
+%1b. [a,b] enters in, Head is a, Tail is [b], list is [a,b]
+%1c.2a. ([b], [a,b], Result comes back as [[b,a]])
+perms_aux([Head|Tail], List, Result):-
+	%1c. ([b], [a,b], Tail_Result comes back as [[b,a]])
+	%1c.2b. ([], [a,b], Tail_Result comes back as [])
+	perms_aux(Tail, List, Tail_Result),
+	%1d. ([a,b], a, DeletedList comes back as [b])
+	%1c.2c. ([a,b], b, Deleted_List comes back as [a])
+	delete(List, Head, Deleted_List),
+	%1e. ([b], [[b]])
+	%1c.2d.([a], Deleted_Perms comes back as [[a]])
+	perms(Deleted_List, Deleted_Perms),
+	%1f. (a, [[b]], Head_Result comes back as [[a,b]])
+	%1c.2e. (b, [[a]], Head_Result comes back as [[b,a]])
+	apply_to_all(Head, Deleted_Perms, Head_Result),
+	%1i. ([[a,b]], [[b,a]])
+	%1c.2h. ([[b,a]], [], [[b,a]])
+	append(Head_Result, Tail_Result, Result).
+
+%1c.2g.1a.
+apply_to_all(_, [], []).
+
+%Hook the Head onto the front of every sublist in the list
+%1g. (a, [[b]|[]], return [[a|[b]|[]]])
+%1c.2f. (b, [[a]], return [[b|[a]]|[])
+apply_to_all(Head, [First_Sub_List|Rest_Of_SubLists], [[Head|First_Sub_List]|Head_On_SubLists]):-
+	%1h. (a, [], [])
+	%1c.2g. (b, [], [])
+	apply_to_all(Head, Rest_Of_SubLists, Head_On_SubLists).	
+
+
+%(6) POWER: Takes a List of elements and prepares a Result list
+%containing sub-lists that correspond to the "subsets" of List.
+%The power set of an empty list contains only an empty list
+power([],[[]]).
+
+%If the list has at least one element then recursively build the power sets
+power([Head|Tail], Result):-
+	%Find all possibilities in the Tail alone
+	power(Tail, Tail_Result),
+	%Now take the Head and recursively append it to every element in the Tails power set
+	power_aux(Head, Tail_Result, Result).
+
+%Base case if we strip off all elements. Last element is appended with an empty power set.
+power_aux(_,[],[]).
+
+%Make sure to append every combination possible to the New_Powerset
+power_aux(Head, [New_List|Powerset], [New_List, [Head|New_List]|New_Powerset]):-
+	%Recursively combine the head with each element in the Powerset while
+	%maintaining each individual element from the previous Powerset in the New_Powerset
+	power_aux(Head, Powerset, New_Powerset).
+
+%DEMO: The tester methods begin here
+start:-
+	write('Beginning demo...'),
+	nl,
+	write('Enter ''y'' when prompted if you would like to see'),
+	nl,
+	write('the mentioned procedure tested.'),
+	nl,
+	write('Enter ''n'' to skip to next procedure.'),
+	nl,
+	nl,
+	cool_reverse_demo,
+	nl,
+	cool_delete_all_demo,
+	nl,
+	flat_reverse_demo,
+	nl,
+	flat_delete_all_demo,
+	nl,
+	perms_demo,
+	nl,
+	power_demo,
+	fail.
+
+start:-
+	nl,
+	write('Goodbye.'),
+	nl.
+
+cool_reverse_demo:-
+	write('Would you like to see a demo of ''cool_reverse''?'),
+	nl,
+	get_yes_or_no(Result),
+	nl,
+	Result == yes,
+	write('?-cool_reverse([], X).'),
+	cool_reverse([], X),
+	nl,
+	write('X = '),
+	write(X),
+	nl,nl,
+	write('?-cool_reverse([a], X).'),
+	cool_reverse([a], Y),
+	nl,
+	write('X = '),
+	write(Y),
+	nl,nl,
+	write('?-cool_reverse([a,b], X).'),
+	cool_reverse([a,b], Z),
+	nl,
+	write('X = '),
+	write(Z),
+	nl,nl,	
+	write('?-cool_reverse([[]], X).'),
+	cool_reverse([[]], A),
+	nl,
+	write('X = '),
+	write(A),
+	nl,nl,
+	write('?-cool_reverse([a,[]], X).'),
+	cool_reverse([a,[]], B),
+	nl,
+	write('X = '),
+	write(B),
+	nl,nl,
+	write('?-cool_reverse([a,[b]], X).'),
+	cool_reverse([a,[b]], C),
+	nl,
+	write('X = '),
+	write(C),
+	nl,nl,
+	write('?-cool_reverse([a,[b,c]], X).'),
+	cool_reverse([a,[b,c]], D),
+	nl,
+	write('X = '),
+	write(D),
+	nl,nl,
+	write('?-cool_reverse([a,[b,[c]]], X).'),
+	cool_reverse([a,[b,[c]]], E),
+	nl,
+	write('X = '),
+	write(E),
+	nl,nl,
+	write('?-cool_reverse([a,[b,c],d], X).'),
+	cool_reverse([a,[b,c],d], F),
+	nl,
+	write('X = '),
+	write(F),
+	nl,nl,	
+	write('?-cool_reverse([a,b,[c,d],[e]], X).'),
+	cool_reverse([a,b,[c,d],[e]], G),
+	nl,
+	write('X = '),
+	write(G),
+	nl,nl,
+	!.
+
+cool_reverse_demo.
+
+cool_delete_all_demo:-
+	write('Would you like to see a demo of ''cool_delete_all''?'),
+	nl,
+	get_yes_or_no(Result),
+	nl,
+	Result == yes,
+	write('?-cool_delete_all(a,[], X).'),
+	cool_delete_all(a,[], X),
+	nl,
+	write('X = '),
+	write(X),
+	nl,nl,
+	write('?-cool_delete_all(a,[a], X).'),
+	cool_delete_all(a,[a], Y),
+	nl,
+	write('X = '),
+	write(Y),
+	nl,nl,
+	write('?-cool_delete_all(b,[a,b], X).'),
+	cool_delete_all(b,[a,b], Z),
+	nl,
+	write('X = '),
+	write(Z),
+	nl,nl,	
+	write('?-cool_delete_all(b,[[]], X).'),
+	cool_delete_all(b,[[]], A),
+	nl,
+	write('X = '),
+	write(A),
+	nl,nl,
+	write('?-cool_delete_all([],[a,[]], X).'),
+	cool_delete_all([],[a,[]], B),
+	nl,
+	write('X = '),
+	write(B),
+	nl,nl,
+	write('?-cool_delete_all(b,[a,[b]], X).'),
+	cool_delete_all(b,[a,[b]], C),
+	nl,
+	write('X = '),
+	write(C),
+	nl,nl,
+	write('?-cool_delete_all(c,[a,[b,c]], X).'),
+	cool_delete_all(c,[a,[b,c]], D),
+	nl,
+	write('X = '),
+	write(D),
+	nl,nl,
+	write('?-cool_delete_all(c,[a,[b,[c]]], X).'),
+	cool_delete_all(c,[a,[b,[c]]], E),
+	nl,
+	write('X = '),
+	write(E),
+	nl,nl,
+	write('?-cool_delete_all([b,c],[a,[b,c],d], X).'),
+	cool_delete_all([b,c],[a,[b,c],d], F),
+	nl,
+	write('X = '),
+	write(F),
+	nl,nl,	
+	write('?-cool_delete_all(e,[a,b,[c,d],[e]], X).'),
+	cool_delete_all(e,[a,b,[c,d],[e]], G),
+	nl,
+	write('X = '),
+	write(G),
+	nl,nl,
+	write('?-cool_delete_all(c,[a,[b,c],d], X).'),
+	cool_delete_all(c,[a,[b,c],d], H),
+	nl,
+	write('X = '),
+	write(H),
+	nl,nl,
+	!.
+
+cool_delete_all_demo.
+
+flat_reverse_demo:-
+	write('Would you like to see a demo of ''flat_reverse''?'),
+	nl,
+	get_yes_or_no(Result),
+	nl,
+	Result == yes,
+	write('?-flat_reverse([], X).'),
+	flat_reverse([], X),
+	nl,
+	write('X = '),
+	write(X),
+	nl,nl,
+	write('?-flat_reverse([a], X).'),
+	flat_reverse([a], Y),
+	nl,
+	write('X = '),
+	write(Y),
+	nl,nl,
+	write('?-flat_reverse([a,b], X).'),
+	flat_reverse([a,b], Z),
+	nl,
+	write('X = '),
+	write(Z),
+	nl,nl,	
+	write('?-flat_reverse([[]], X).'),
+	flat_reverse([[]], A),
+	nl,
+	write('X = '),
+	write(A),
+	nl,nl,
+	write('?-flat_reverse([a,[]], X).'),
+	flat_reverse([a,[]], B),
+	nl,
+	write('X = '),
+	write(B),
+	nl,nl,
+	write('?-flat_reverse([a,[b]], X).'),
+	flat_reverse([a,[b]], C),
+	nl,
+	write('X = '),
+	write(C),
+	nl,nl,
+	write('?-flat_reverse([a,[b,c]], X).'),
+	flat_reverse([a,[b,c]], D),
+	nl,
+	write('X = '),
+	write(D),
+	nl,nl,
+	write('?-flat_reverse([a,[b,[c]]], X).'),
+	flat_reverse([a,[b,[c]]], E),
+	nl,
+	write('X = '),
+	write(E),
+	nl,nl,
+	write('?-flat_reverse([a,[b,c],d], X).'),
+	flat_reverse([a,[b,c],d], F),
+	nl,
+	write('X = '),
+	write(F),
+	nl,nl,	
+	write('?-flat_reverse([a,b,[c,d],[e]], X).'),
+	flat_reverse([a,b,[c,d],[e]], G),
+	nl,
+	write('X = '),
+	write(G),
+	nl,nl,
+	!.
+
+flat_reverse_demo.
+
+flat_delete_all_demo:-
+	write('Would you like to see a demo of ''flat_delete_all''?'),
+	nl,
+	get_yes_or_no(Result),
+	nl,
+	Result == yes,
+	write('?-flat_delete_all(a,[], X).'),
+	flat_delete_all(a,[], X),
+	nl,
+	write('X = '),
+	write(X),
+	nl,nl,
+	write('?-flat_delete_all(a,[a], X).'),
+	flat_delete_all(a,[a], Y),
+	nl,
+	write('X = '),
+	write(Y),
+	nl,nl,
+	write('?-flat_delete_all(b,[a,b], X).'),
+	flat_delete_all(b,[a,b], Z),
+	nl,
+	write('X = '),
+	write(Z),
+	nl,nl,	
+	write('?-flat_delete_all(b,[[]], X).'),
+	flat_delete_all(b,[[]], A),
+	nl,
+	write('X = '),
+	write(A),
+	nl,nl,
+	write('?-flat_delete_all([],[a,[]], X).'),
+	flat_delete_all([],[a,[]], B),
+	nl,
+	write('X = '),
+	write(B),
+	nl,nl,
+	write('?-flat_delete_all(b,[a,[b]], X).'),
+	flat_delete_all(b,[a,[b]], C),
+	nl,
+	write('X = '),
+	write(C),
+	nl,nl,
+	write('?-flat_delete_all(c,[a,[b,c]], X).'),
+	flat_delete_all(c,[a,[b,c]], D),
+	nl,
+	write('X = '),
+	write(D),
+	nl,nl,
+	write('?-flat_delete_all(c,[a,[b,[c]]], X).'),
+	flat_delete_all(c,[a,[b,[c]]], E),
+	nl,
+	write('X = '),
+	write(E),
+	nl,nl,
+	write('?-flat_delete_all([b,c],[a,[b,c],d], X).'),
+	flat_delete_all([b,c],[a,[b,c],d], F),
+	nl,
+	write('X = '),
+	write(F),
+	nl,nl,	
+	write('?-flat_delete_all(e,[a,b,[c,d],[e]], X).'),
+	flat_delete_all(e,[a,b,[c,d],[e]], G),
+	nl,
+	write('X = '),
+	write(G),
+	nl,nl,
+	write('?-flat_delete_all(c,[a,[b,c],d], X).'),
+	flat_delete_all(c,[a,[b,c],d], H),
+	nl,
+	write('X = '),
+	write(H),
+	nl,nl,
+	write('?-flat_delete_all(c,[a,[b,[a,[b,[c],c],d],c],d], X).'),
+	flat_delete_all(c,[a,[b,[a,[b,[c],c],d],c],d], I),
+	nl,
+	write('X = '),
+	write(I),
+	nl,nl,
+	!.
+
+flat_delete_all_demo.
+
+perms_demo:-
+	write('Would you like to see a demo of ''perms''?'),
+	nl,
+	get_yes_or_no(Result),
+	nl,
+	Result == yes,
+	write('?-perms([], X).'),
+	perms([], X),
+	nl,
+	write('X = '),
+	write(X),
+	nl,nl,
+	write('?-perms([a], X).'),
+	perms([a], Y),
+	nl,
+	write('X = '),
+	write(Y),
+	nl,nl,
+	write('?-perms([a,b], X).'),
+	perms([a,b], Z),
+	nl,
+	write('X = '),
+	write(Z),
+	nl,nl,	
+	write('?-perms([[]], X).'),
+	perms([[]], A),
+	nl,
+	write('X = '),
+	write(A),
+	nl,nl,
+	write('?-perms([a,[]], X).'),
+	perms([a,[]], B),
+	nl,
+	write('X = '),
+	write(B),
+	nl,nl,
+	write('?-perms([a,[b]], X).'),
+	perms([a,[b]], C),
+	nl,
+	write('X = '),
+	write(C),
+	nl,nl,
+	write('?-perms([a,[b,c]], X).'),
+	perms([a,[b,c]], D),
+	nl,
+	write('X = '),
+	write(D),
+	nl,nl,
+	write('?-perms([a,[b,[c]]], X).'),
+	perms([a,[b,[c]]], E),
+	nl,
+	write('X = '),
+	write(E),
+	nl,nl,
+	write('?-perms([a,[b,c],d], X).'),
+	perms([a,[b,c],d], F),
+	nl,
+	write('X = '),
+	write(F),
+	nl,nl,	
+	write('?-perms([a,b,[c,d],[e]], X).'),
+	perms([a,b,[c,d],[e]], G),
+	nl,
+	write('X = '),
+	write(G),
+	nl,nl,
+	write('?-perms([a,b,c,d], X).'),
+	perms([a,b,c,d], H),
+	nl,
+	write('X = '),
+	write(H),
+	nl,nl,
+	!.
+
+perms_demo.
+
+power_demo:-
+	write('Would you like to see a demo of ''power''?'),
+	nl,
+	get_yes_or_no(Result),
+	nl,
+	Result == yes,
+	write('?-power([], X).'),
+	power([], X),
+	nl,
+	write('X = '),
+	write(X),
+	nl,nl,
+	write('?-power([a], X).'),
+	power([a], Y),
+	nl,
+	write('X = '),
+	write(Y),
+	nl,nl,
+	write('?-power([a,b], X).'),
+	power([a,b], Z),
+	nl,
+	write('X = '),
+	write(Z),
+	nl,nl,	
+	write('?-power([[]], X).'),
+	power([[]], A),
+	nl,
+	write('X = '),
+	write(A),
+	nl,nl,
+	write('?-power([a,[]], X).'),
+	power([a,[]], B),
+	nl,
+	write('X = '),
+	write(B),
+	nl,nl,
+	write('?-power([a,[b]], X).'),
+	power([a,[b]], C),
+	nl,
+	write('X = '),
+	write(C),
+	nl,nl,
+	write('?-power([a,[b,c]], X).'),
+	power([a,[b,c]], D),
+	nl,
+	write('X = '),
+	write(D),
+	nl,nl,
+	write('?-power([a,[b,[c]]], X).'),
+	power([a,[b,[c]]], E),
+	nl,
+	write('X = '),
+	write(E),
+	nl,nl,
+	write('?-power([a,[b,c],d], X).'),
+	power([a,[b,c],d], F),
+	nl,
+	write('X = '),
+	write(F),
+	nl,nl,	
+	write('?-power([a,b,[c,d],[e]], X).'),
+	power([a,b,[c,d],[e]], G),
+	nl,
+	write('X = '),
+	write(G),
+	nl,nl,
+	write('?-power([a,b,c,d], X).'),
+	power([a,b,c,d], H),
+	nl,
+	write('X = '),
+	write(H),
+	nl,nl,
+	!.
+
+power_demo.
+
+%Demo and tester methods end here
+
+% From the book
+% PROLOG PROGRAMMING IN DEPTH
+% by Michael A. Covington, Donald Nute, and Andre Vellino
+% (Prentice Hall, 1997).
+% Copyright 1997 Prentice-Hall, Inc.
+% For educational use only
+
+% File GETYESNO.PL
+% Menu that obtains 'yes' or 'no' answer
+
+get_yes_or_no(Result) :-
+get(Char),              % read a character
+get0(_),                % consume the Return after it
+interpret(Char,Result),
+!.                      % cut -- see text
+
+get_yes_or_no(Result) :-
+nl,
+write('Type Y or N:'),
+get_yes_or_no(Result).
+
+interpret(89,yes).  % ASCII 89  = 'Y'
+interpret(121,yes). % ASCII 121 = 'y'
+interpret(78,no).   % ASCII 78  = 'N'
+interpret(110,no).  % ASCII 110 = 'n'
